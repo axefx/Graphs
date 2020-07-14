@@ -43,7 +43,7 @@ class Graph:
             v = q.dequeue()
             if v not in visited:
                 visited.add(v)
-                print(f"Visited: {v}")
+                print(f"{v}")
                 for next_vert in self.get_neighbors(v):
                     q.enqueue(next_vert)
 
@@ -59,7 +59,7 @@ class Graph:
             v = s.pop()
             if v not in visited:
                 visited.add(v)
-                print(f"Visited: {v}")
+                print(f"{v}")
                 for next_vert in self.get_neighbors(v):
                     s.push(next_vert)
 
@@ -76,7 +76,7 @@ class Graph:
                 return
             else:
                 visited.add(vertex)
-                print(f"Visited: {vertex}")
+                print(f"{vertex}")
             for neighbor in self.get_neighbors(vertex):
                 dft_inner(neighbor)
 
@@ -224,4 +224,4 @@ if __name__ == '__main__':
         [1, 2, 4, 7, 6]
     '''
     # print(graph.dfs(1, 6))
-    print(graph.dfs_recursive(1, 6))
+    # print(graph.dfs_recursive(1, 6))
