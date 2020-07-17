@@ -58,13 +58,21 @@ while s.size() > 0:
     if room_id not in visited:
         visited[room_id] = path
         # traversal_path.append()
-
+        if len(g[room_id].keys()) == 1:
+            direction = world.rooms[room_id].get_exits()[0]
+            traversal_path.append(direction)
+            s.enqueue([g[room_id][direction]])
         for direction in g[room_id]:
-            next_path = path[:]
+            neighbor = g[room_id][direction]
+            if neighbor not in visited:
+                traversal_path.append(direction)
+                s.enqueue([g[room_id][direction]])
 
-            neighbor_id = g[room_id][direction]
-            next_path.append(neighbor_id)
-            s.enqueue(next_path)
+            # next_path = path[:]
+
+            # neighbor_id = g[room_id][direction]
+            # next_path.append(neighbor_id)
+            # s.enqueue(next_path)
         # if len(g[neighbor_id]) == 1 and neighbor_id not in visited:
         #     traversal_path.append([direction,g[]])
         #     visited.add(g[room_id][direction])
