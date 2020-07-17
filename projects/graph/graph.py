@@ -63,24 +63,31 @@ class Graph:
                 for next_vert in self.get_neighbors(v):
                     s.push(next_vert)
 
-    def dft_recursive(self, starting_vertex):
+    def dft_recursive(self, starting_vertex, visited = None):
         """
         Print each vertex in depth-first order
         beginning from starting_vertex.
 
         This should be done using recursion.
         """
-        visited = set()
-        def dft_inner(vertex):
-            if vertex in visited:
-                return
-            else:
-                visited.add(vertex)
-                print(f"{vertex}")
-            for neighbor in self.get_neighbors(vertex):
-                dft_inner(neighbor)
+        if visited == None:
+            visited = set()
+        visited.add(starting_vertex)
+        print(f'{starting_vertex}')
+        for next_vert in self.get_neighbors(starting_vertex):
+            if next_vert not in visited:
+                self.dft_recursive(next_vert, visited)
+        # visited = set()
+        # def dft_inner(vertex):
+        #     if vertex in visited:
+        #         return
+        #     else:
+        #         visited.add(vertex)
+        #         print(f"{vertex}")
+        #     for neighbor in self.get_neighbors(vertex):
+        #         dft_inner(neighbor)
 
-        dft_inner(starting_vertex)
+        # dft_inner(starting_vertex)
 
     def bfs(self, starting_vertex, destination_vertex):
         """
@@ -137,7 +144,7 @@ class Graph:
                     return next_path
                 s.push(next_path)
 
-    def dfs_recursive(self, starting_vertex, destination_vertex):
+    def dfs_recursive(self, v, destination_vertex,path = None, visited=None):
         """
         Return a list containing a path from
         starting_vertex to destination_vertex in
@@ -145,31 +152,46 @@ class Graph:
 
         This should be done using recursion.
         """
-        visited = set()
+        if visited == None:        # if visited doesnt exist create it
+            visited = set()
+        if path == None:             # if path doesnt exist create it
+            path = []
+        visited.add(v)              # add current node to visited
+        path = path + [v]           # add current node to path
+        if v == destination_vertex:      # if current node is destination 
+            return path                  # return the path
+        for vertex in self.vertices[v]:          # find the next node 
+            if vertex not in visited:             # if next node is not in visited
 
-        def dft_inner(path):
-            last_vertex = path[-1]
-            
-            if last_vertex in visited:
-                return None
-            else:
-                visited.add(last_vertex)
+                new_path = self.dfs_recursive(vertex, destination_vertex, path, visited)            # create new path
+                if new_path != None:                                         # if new path is not at the end
+                    return new_path                                         # return the new path
+        ####
+        # visited = set()
 
-            if last_vertex == destination_vertex:
-                return path
+        # def dft_inner(path):
+        #     last_vertex = path[-1]
             
-            for neighbor in self.get_neighbors(last_vertex):
-                next_path = path.copy()
-                next_path.append(neighbor)
-            
-                found = dft_inner(next_path)
-                if found:
-                    return found
-            
-            return None
+        #     if last_vertex in visited:
+        #         return None
+        #     else:
+        #         visited.add(last_vertex)
 
-        return dft_inner([starting_vertex])
-        
+        #     if last_vertex == destination_vertex:
+        #         return path
+            
+        #     for neighbor in self.get_neighbors(last_vertex):
+        #         next_path = path.copy()
+        #         next_path.append(neighbor)
+            
+        #         found = dft_inner(next_path)
+        #         if found:
+        #             return found
+            
+        #     return None
+
+        # return dft_inner([starting_vertex])
+        ####
         # if visited is None:
         #     visited = set()
         # if path is None:
