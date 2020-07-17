@@ -88,25 +88,37 @@ go_back = {
 room = {}
 visited = set()
 path = []
-
-while len(visited) != len(room_graph):              # keep running this while visited is lower than total room
+# keep running this while visited is lower than total room
+# if the current room is not in visited
+# add it to visited 
+# if there is still a direction to go on
+# move in that direction and pop it from hash
+# if the new room is not in memory
+#save the move to path
+#save the movement
+# move the player in that direction 
+# if there are no new direction to go on
+# go back to the previous room
+#save the movement
+# move the player
+while len(visited) != len(room_graph):             
     roomId = player.current_room.id
-    if roomId not in visited:                                       # if the current room is not in visited
-        visited.add(roomId)                                           # add it to visited 
+    if roomId not in visited:                                       
+        visited.add(roomId)                                           
         directions = list(g[player.current_room.id].keys())
         room[roomId] = directions
     while len(room[roomId]) >= 0:                                  
-        if len(room[roomId]) > 0:                                  # if there is still a direction to go on
-            move = room[roomId].pop()                               # move in that direction and pop it from hash
-            if g[roomId][move] not in visited:               # if the new room is not in memory
-                path.append(move)                                                   #save the move to path
-                traversal_path.append(move)              #save the movement
-                player.travel(move)                                                # move the player in that direction 
+        if len(room[roomId]) > 0:                                  
+            move = room[roomId].pop()                               
+            if g[roomId][move] not in visited:               
+                path.append(move)                                                   
+                traversal_path.append(move)              
+                player.travel(move)                                                
                 break
-        elif len(room[roomId]) == 0:                                        # if there are no new direction to go on
-            back_room = path.pop()                                       # go back to the previous room
-            traversal_path.append(go_back[back_room])         #save the movement
-            player.travel(go_back[back_room])                # move the player
+        elif len(room[roomId]) == 0:                                        
+            back_room = path.pop()                                       
+            traversal_path.append(go_back[back_room])         
+            player.travel(go_back[back_room])                
             break
 
 print(f"traversal_path: {traversal_path}")
