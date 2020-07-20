@@ -13,17 +13,17 @@ world = World()
 
 # You may uncomment the smaller graphs for development and testing purposes.
 # map_file = "maps/test_line.txt"
-# map_file = "maps/test_cross.txt"
+map_file = "maps/test_cross.txt"
 # map_file = "maps/test_loop.txt"
 # map_file = "maps/test_loop_fork.txt"
-map_file = "maps/main_maze.txt"
+# map_file = "maps/main_maze.txt"
 
 # Loads the map into a dictionary
 room_graph=literal_eval(open(map_file, "r").read())
 world.load_graph(room_graph)
 
 # Print an ASCII map
-# world.print_rooms()
+world.print_rooms()
 
 player = Player(world.starting_room)
 
@@ -44,29 +44,256 @@ traversal_path = []
 # add to visited 
 # add direction to traversal path
 
+# keep running this while visited is lower than total room
+# if the current room is not in visited
+# add it to visited 
+# if there is still a direction to go on
+# move in that direction and pop it from hash
+# if the new room is not in memory
+# save the move to path
+# save the movement
+# move the player in that direction 
+# if there are no new direction to go on
+# go back to the previous room
+# save the movement
+# move the player
 
-g = {}
-for i in range(len(world.rooms)):
-    g[world.rooms[i].id] = { exits:world.rooms[i].get_room_in_direction(exits).id for exits in world.rooms[i].get_exits()}
+opposite = {
+    'n': 's',
+    's': 'n',
+    'e': 'w',
+    'w': 'e'
+}
+g = {} # {0: { 's': '?', 'n': 1}}
+visited = set() # add player current room in before moving
+located = {} # {0: [], 1: ['n']}}
+path = [] # traversal path
+starting_direction = 'n' # start with s or random
+s = Stack() # used for walking player
+s.push(starting_direction)
+# create graph 
+while len(visited) < len(world.rooms):
+    print(f"len(visited): {len(visited)}")
+    room = player.current_room
+    room_id = room.id
+    all_exits = room.get_exits()
 
-visited = {}
-s = Queue()
-s.enqueue([world.starting_room.id])
-while s.size() > 0:
-    path = s.dequeue()
-    room_id = path[-1]
-    if room_id not in visited:
-        visited[room_id] = path
-        # traversal_path.append()
-        if len(g[room_id].keys()) == 1:
-            direction = world.rooms[room_id].get_exits()[0]
-            traversal_path.append(direction)
-            s.enqueue([g[room_id][direction]])
-        for direction in g[room_id]:
-            neighbor = g[room_id][direction]
-            if neighbor not in visited:
-                traversal_path.append(direction)
-                s.enqueue([g[room_id][direction]])
+    print(f"player location: {player.current_room.id}")
+    # this adds players currentroom id indexing a dictionary of
+    # {posible moves: '?'} to graph
+    if room_id not in g:
+        g[room_id] = {direction: '?' for direction in all_exits}
+    def bfs(starting_room):
+        explored = set()
+        q = Queue() # used for finding next direction
+        q.enqueue([starting_direction]) 
+        # While the queue is not empty...
+        while q.size() > 0:
+            path = q.dequeue()
+            direction = path[-1]
+            next_room = player.current_room.get_room_in_direction(direction)
+            if next_room.id not in g:
+                g[next_room.id] = {direction: '?' for direction in next_room.get_exits()}
+            # If that vertex has not been visited...
+            print(g)
+            if (next_room, direction) not in explored:
+                # CHECK IF IT'S THE TARGET
+                print(next_room.id,direction)
+                if direction in g[next_room.id] and g[next_room.id][direction] == '?':
+                    # IF SO, RETURN PATH
+                    return (path, explored)
+                # Mark it as visited...
+                explored.add((next_room, direction))
+            # Then add A PATH TO its neighbors to the back of the queue
+            for exits in next_room.get_exits():
+                # COPY THE PATH
+                next_path = path[:]
+                # APPEND THE NEIGHBOR TO THE BACK
+                next_path.append(exits)
+                q.enqueue(next_path)
+        return None
+    next_path, explored = bfs(room)
+    print(f"next_path: {next_path}")
+    visited.add(room_id)
+    print(f"visited: {visited}")
+    if next_path:
+        for direction in next_path:
+            g[room_id][direction] = room.get_room_in_direction(direction).id
+            path.append(direction)
+            player.travel(direction)
+    print(f"player location: {player.current_room.id}")
+    if len(visited) < 4:
+        break
+    # while q.size() > 0:
+    #     path = q.dequeue()
+    #     direction = path[-1]
+    #     next_room = room.get_room_in_direction(direction)
+    #     print(f"next_room: {next_room.id}")
+    #     exits = next_room.get_exits()
+    #     for direction in all_exits:
+    #         next_path = path[:]
+    #         next_path.append(direction)
+    #         if g[room.id][direction] == '?':
+    #             unexplored_path = next_path
+    #         if (room, direction) not in visited:
+    #             q.enqueue(next_path)
+    #         visited.add((room, direction))
+
+    # if unexplored_path is None or len(unexplored_path) == 0:
+    #     print("no more")
+    # for direction in unexplored_path:
+    #     new_room = room.get_room_in_direction(direction)
+    #     path.append(direction)
+    #     if new_room:
+    #         g[room.id][direction] = new_room.id
+    #         if new_room.id not in g:
+    #             g[new_room.id] = {direction: '?' for direction in all_exits}
+    #         g[new_room.id][opposite[direction]] = room.id
+    #         room = new_room
+    # if len(visited) < 2:
+    #     break
+    # if next_room:
+    #     next_room_id = next_room.id
+    #     print(f"next_room: {next_room_id}")
+    #     print(f"g: {g}")
+    #     if next_room_id not in g:
+    #         print(f"next_room.get_exits(): {next_room.get_exits()}")
+    #         g[next_room_id] = {move: '?' for move in next_room.get_exits()}
+        # add both room ids to graph
+        # g[next_room_id][opposite[starting_direction]] = room_id
+        # g[room_id][starting_direction] = next_room_id
+    # print(f"g: {g}")
+    # print(' - - '*2*8)
+    
+
+    # visited.add(room_id)
+
+    # TODO handle movement
+    # print(f"s.size(): {s.size()}")
+    # print(f"s.stack: {s.stack}")
+    # next_direction = s.pop()
+    # print(f"next_direction: {next_direction}")
+    # print(f"s.size(): {s.size()}")
+    # next_room = player.current_room.get_room_in_direction(next_direction)
+    # print(f"g: {g}")
+    # print(f"visited: {visited}")
+    # unexplored = []
+    # for direction in player.current_room.get_exits():
+    #     if g[player.current_room.id][direction] == '?':# and direction != next_direction:
+    #         unexplored.append(direction)
+    # print(f"unexplored: {unexplored}")
+    # if next_direction in unexplored:
+    #     print(f"next_direction in unexplored: {next_direction in unexplored}")
+    #     if next_room.id in visited:
+    #         print("next room visited")
+    #     print(f"next_room.id: {next_room.id}")
+    # print(f"player.current_room.id: {player.current_room.id}")
+    # print(f"moving...")
+    # path.append(starting_direction)
+    # player.travel(starting_direction)
+    # print(f"player.current_room.id: {player.current_room.id}")
+        
+    #     # print(f"next_direction: {next_direction}")
+    #     s.push(next_direction)
+    # # else:
+    # if len(unexplored) > 0:
+    #     print(f"unexplored: {unexplored}")
+    #     print(f"unexplored: {unexplored[0]}")
+    #     s.push(unexplored[-1])
+    # else:
+    #     print(f"going back")
+    #     s.push(opposite[next_direction])
+
+    # print(f"len(visited) after moving: {len(visited)}")
+    # # print(f"len(world.rooms): {len(world.rooms)}")
+    # print('loop_'*2*8)
+    # if len(visited) == 2 or len(path) > 4:
+    #     break
+
+    # print(f"s.size(): {s.size()}")
+    # print(f"s.stack: {s.stack}")
+    # next_direction = s.pop()
+    # print(f"next_direction: {next_direction}")
+    # print(f"s.size(): {s.size()}")
+    # next_room = player.current_room.get_room_in_direction(next_direction)
+    # print(f"g: {g}")
+    # print(f"visited: {visited}")
+    # unexplored = []
+    # for direction in player.current_room.get_exits():
+    #     if g[player.current_room.id][direction] == '?':# and direction != next_direction:
+    #         unexplored.append(direction)
+    # print(f"unexplored: {unexplored}")
+    # if next_direction in unexplored:
+    #     print(f"next_direction in unexplored: {next_direction in unexplored}")
+    #     if next_room.id in visited:
+    #         print("next room visited")
+    #     print(f"next_room.id: {next_room.id}")
+    #     print(f"player.current_room.id: {player.current_room.id}")
+    #     print(f"moving...")
+    #     print(f"next_direction: {next_direction}")
+    #     path.append(next_direction)
+    #     player.travel(next_direction)
+    #     print(f"player.current_room.id: {player.current_room.id}")
+        
+    #     # print(f"next_direction: {next_direction}")
+    #     s.push(next_direction)
+    # # else:
+    # if len(unexplored) > 0:
+    #     print(f"unexplored: {unexplored}")
+    #     print(f"unexplored: {unexplored[0]}")
+    #     s.push(unexplored[-1])
+    # else:
+    #     print(f"going back")
+    #     s.push(opposite[next_direction])
+
+    # print(f"len(visited) after moving: {len(visited)}")
+    # print(f"len(world.rooms): {len(world.rooms)}")
+    # print('_____'*2*8)
+    # if len(visited) == 5 or len(path) > 4:
+    #     break
+print('_____'*2*8)
+print(f"len(world.rooms): {len(world.rooms)}")
+print(f"path: {path}")
+print(f"located: {located}")
+print(f"visited: {visited}")
+print(f"g: {g}")
+print(f"s: {s.stack}")
+# traversal_path = path
+
+# g = {}
+# for i in range(len(world.rooms)):
+#     g[world.rooms[i].id] = { exits:world.rooms[i].get_room_in_direction(exits).id for exits in world.rooms[i].get_exits()}
+
+# visited = set()
+# s = Stack()
+# s.push(world.starting_room.id)
+# while len(visited) is not len(g):
+#     room_id = s.pop()
+#     if room_id not in visited:
+#         visited.add(room_id)
+#         if len(g[room_id].keys()) > 1:
+#             for direction in g[room_id]:
+#                 traversal_path.append(direction)
+#                 s.push(g[room_id][direction])
+
+# visited = {}
+# s = Queue()
+# s.enqueue([world.starting_room.id])
+# while s.size() > 0:
+#     path = s.dequeue()
+#     room_id = path[-1]
+#     if room_id not in visited:
+#         visited[room_id] = path
+#         # traversal_path.append()
+#         if len(g[room_id].keys()) == 1:
+#             direction = world.rooms[room_id].get_exits()[0]
+#             traversal_path.append(direction)
+#             s.enqueue([g[room_id][direction]])
+#         else:
+#             for direction in g[room_id]:
+#                 neighbor = g[room_id][direction]
+#                 traversal_path.append(direction)
+#                 s.enqueue([g[room_id][direction]])
 
             # next_path = path[:]
 
@@ -79,9 +306,9 @@ while s.size() > 0:
             # s.push(g[room_id][direction])
 
 
-print(f"visited: {visited}")
-path = list(visited.keys())
-next_room = {path[i]: path[i+1] for i in range(len(path)-1)}
+# print(f"visited: {visited}")
+# path = list(visited.keys())
+# next_room = {path[i]: path[i+1] for i in range(len(path)-1)}
 # print(next_room)
 # s = Stack()
 # walked = set()
@@ -101,50 +328,6 @@ next_room = {path[i]: path[i+1] for i in range(len(path)-1)}
 # path = list(visited.keys())
 # next_id = {path[i]: path[i+1] for i in range(len(path)-1)}
 
-####
-# go_back = {
-#     'n': 's',
-#     's': 'n',
-#     'e': 'w',
-#     'w': 'e'
-# }
-
-# room = {}
-# visited = set()
-# path = []
-# # keep running this while visited is lower than total room
-# # if the current room is not in visited
-# # add it to visited 
-# # if there is still a direction to go on
-# # move in that direction and pop it from hash
-# # if the new room is not in memory
-# # save the move to path
-# # save the movement
-# # move the player in that direction 
-# # if there are no new direction to go on
-# # go back to the previous room
-# # save the movement
-# # move the player
-# while len(visited) != len(room_graph):             
-#     roomId = player.current_room.id
-#     if roomId not in visited:                                       
-#         visited.add(roomId)                                           
-#         directions = list(g[player.current_room.id].keys())
-#         room[roomId] = directions
-#     while len(room[roomId]) >= 0:                                  
-#         if len(room[roomId]) > 0:                                  
-#             move = room[roomId].pop()                               
-#             if g[roomId][move] not in visited:               
-#                 path.append(move)                                                   
-#                 traversal_path.append(move)              
-#                 player.travel(move)                                                
-#                 break
-#         elif len(room[roomId]) == 0:                                        
-#             back_room = path.pop()                                       
-#             traversal_path.append(go_back[back_room])         
-#             player.travel(go_back[back_room])                
-#             break
-####
 print(f"traversal_path: {traversal_path}")
 ####
 # visited = set()
